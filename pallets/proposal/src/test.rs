@@ -1,7 +1,7 @@
 // use super::*;
-use crate::{mock::*, Error};
+use crate::{mock::*, Error, ProposalIndex};
 use frame_support::{assert_noop, assert_ok, traits::ReservableCurrency};
-use proposal_types::models::Target;
+use proposal_types::{models::Target, traits::ProposalTrait};
 
 #[test]
 fn can_make_a_proposal() {
@@ -60,5 +60,13 @@ fn can_endorse_a_proposal() {
 		assert_eq!(<Balances as ReservableCurrency<_>>::reserved_balance(&2), 10);
 		let deposit = Proposal::deposit_of(1, proposal_index).unwrap();
 		assert_eq!(deposit.0.len(), 2);
+
+		<Proposal as ProposalTrait>::remove_highest_valued_proposal_index(1);
+
+		assert_eq!(<Balances as ReservableCurrency<_>>::reserved_balance(&2), 0);
+		assert_eq!(<Balances as ReservableCurrency<_>>::reserved_balance(&1), 0);
+		assert_eq!(Proposal::deposit_of(1, 1), None);
+		assert_eq!(Proposal::proposals(1, 1), None);
+		assert_eq!(Proposal::proposal_index(1), vec![]);
 	});
 }
