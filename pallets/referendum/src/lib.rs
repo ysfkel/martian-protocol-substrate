@@ -33,7 +33,8 @@ pub mod pallet {
 			+ TypeInfo
 			+ SafeAdd
 			+ Into<u128>;
-		type ProposalSource: ProposalTrait<ProposalId = Self::ProposalId>;
+
+		type ProposalSource: ProposalTrait<Self::AccountId, ProposalId = Self::ProposalId>;
 	}
 
 	#[pallet::call]
@@ -52,7 +53,45 @@ pub mod pallet {
 		) -> DispatchResultWithPostInfo {
 			//let id: T::ProposalId = 1_; //T::ProposalId::from(1);
 			//let x = T::ProposalSource::proposal(id);
+
 			Ok(().into())
 		}
+	}
+
+	impl<T: Config> Pallet<T> {
+		pub fn get_proposal() {
+			// let mut proposals_index = Self::proposal_index();
+			if let Some(winner_index) = T::ProposalSource::get_highest_valued_proposal_index() {
+			} else {
+			}
+
+			// {
+			// 	let (proposal_index, proposal) = proposals_index.swap_remove(winner_index);
+			// 	<ProposalIndex<T>>::put(proposals_index);
+			// 	//refund depositors
+			// 	// if let Some((depositors, depositdeposit)) = <DepositOf<T>>::take(proposal_index)
+			// 	// { 	for d in &depositors {
+			// 	// 		T::Currency::unreserve(d, deposit);
+			// 	// 	}
+			// 	// }
+			// }
+		}
+		// pub fn get_proposal() {
+		// 	let mut proposals_index = Self::proposal_index();
+		// 	if let Some((winner_index, _)) = proposals_index
+		// 		.iter()
+		// 		.enumerate()
+		// 		.max_by_key(|x| Self::backing_for((x.1).0).defensive_unwrap_or_else(Zero::zero))
+		// 	{
+		// 		let (proposal_index, proposal) = proposals_index.swap_remove(winner_index);
+		// 		<ProposalIndex<T>>::put(proposals_index);
+		// 		//refund depositors
+		// 		// if let Some((depositors, depositdeposit)) = <DepositOf<T>>::take(proposal_index)
+		// 		// { 	for d in &depositors {
+		// 		// 		T::Currency::unreserve(d, deposit);
+		// 		// 	}
+		// 		// }
+		// 	}
+		// }
 	}
 }

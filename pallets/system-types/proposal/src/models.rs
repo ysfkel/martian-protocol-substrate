@@ -2,7 +2,6 @@ use codec::Decode;
 
 use frame_support::pallet_prelude::*;
 use scale_info::TypeInfo;
-use sp_runtime::Perquintill;
 use sp_std::vec::Vec;
 
 #[derive(Clone, Encode, Decode, Eq, PartialEq, TypeInfo)]
