@@ -28,6 +28,7 @@ frame_support::construct_runtime!(
 
 impl pallet_council::Config for Test {
 	type Event = Event;
+	type CouncilId = u128; //<Test as frame_system::Config>::AccountId;
 }
 
 parameter_types! {

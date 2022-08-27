@@ -9,8 +9,8 @@ pub trait ProposalTrait {
 	fn proposal(
 		council_id: Self::CouncilId,
 		index: Self::ProposalId,
-	) -> Option<Proposal<Self::AccountId>>;
-	fn remove_highest_valued_proposal_index(
+	) -> Option<Proposal<Self::CouncilId>>;
+	fn retrieve_highest_valued_proposal(
 		council_id: Self::CouncilId,
-	) -> Option<Proposal<Self::AccountId>>;
+	) -> Option<Proposal<Self::CouncilId>>;
 }

@@ -12,9 +12,10 @@ pub mod pallet {
 	use frame_system::pallet_prelude::*;
 	use num_traits::One;
 	use pallet_math::SafeAdd;
-	use sp_runtime::traits::CheckedAdd;
+	use sp_runtime::traits::{CheckedAdd, MaybeDisplay};
 
 	#[pallet::pallet]
+	#[pallet::without_storage_info]
 	pub struct Pallet<T>(_);
 
 	#[pallet::config]
@@ -34,64 +35,60 @@ pub mod pallet {
 			+ SafeAdd
 			+ Into<u128>;
 
-		type ProposalSource: ProposalTrait<Self::AccountId, ProposalId = Self::ProposalId>;
+		type CouncilId: FullCodec
+			+ Parameter
+			+ Member
+			+ MaybeSerializeDeserialize
+			+ Debug
+			+ MaybeDisplay
+			+ Ord
+			+ MaxEncodedLen
+			+ Eq
+			+ PartialEq
+			+ Copy
+			+ TypeInfo;
+
+		type ProposalSource: ProposalTrait<
+			AccountId = Self::AccountId,
+			ProposalId = Self::ProposalId,
+			CouncilId = Self::CouncilId,
+		>;
 	}
+
+	#[pallet::storage]
+	#[pallet::getter(fn proposals)]
+	pub type Proposals<T: Config> =
+		StorageMap<_, Twox64Concat, T::CouncilId, Proposal<T::CouncilId>, OptionQuery>;
+
+	// #[pallet::storage]
+	// #[pallet::getter(fn referendums)]
+	// pub type Referendums<T: Config> =
+	// 	StorageMap<_, Twox64Concat, T::CouncilId, Referendum<T::CouncilId>, OptionQuery>;
 
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
 		#[pallet::weight(100_000)]
-		pub fn start_referendum_by_value(origin: OriginFor<T>) -> DispatchResultWithPostInfo {
-			//let id: T::ProposalId = T::ProposalId::from(1);
-			//let x = T::ProposalSource::proposal(id);
-			Ok(().into())
-		}
-
-		#[pallet::weight(100_000)]
-		pub fn start_referendum_by_index(
+		pub fn start_referendum_by_value(
 			origin: OriginFor<T>,
-			proposal_index: T::ProposalId,
+			council_id: T::CouncilId,
 		) -> DispatchResultWithPostInfo {
-			//let id: T::ProposalId = 1_; //T::ProposalId::from(1);
-			//let x = T::ProposalSource::proposal(id);
+			if let Some(proposal) = Self::get_proposal(council_id) {
+				<Proposals<T>>::insert(council_id, proposal);
+			}
+			// - todo - caller must be council
 
 			Ok(().into())
 		}
 	}
 
 	impl<T: Config> Pallet<T> {
-		pub fn get_proposal() {
-			// let mut proposals_index = Self::proposal_index();
-			if let Some(winner_index) = T::ProposalSource::get_highest_valued_proposal_index() {
-			} else {
+		fn get_proposal(council_id: T::CouncilId) -> Option<Proposal<T::AccountId>> {
+			if let Some(proposal) = T::ProposalSource::retrieve_highest_valued_proposal(council_id)
+			{
+				return Some(proposal)
 			}
 
-			// {
-			// 	let (proposal_index, proposal) = proposals_index.swap_remove(winner_index);
-			// 	<ProposalIndex<T>>::put(proposals_index);
-			// 	//refund depositors
-			// 	// if let Some((depositors, depositdeposit)) = <DepositOf<T>>::take(proposal_index)
-			// 	// { 	for d in &depositors {
-			// 	// 		T::Currency::unreserve(d, deposit);
-			// 	// 	}
-			// 	// }
-			// }
+			None
 		}
-		// pub fn get_proposal() {
-		// 	let mut proposals_index = Self::proposal_index();
-		// 	if let Some((winner_index, _)) = proposals_index
-		// 		.iter()
-		// 		.enumerate()
-		// 		.max_by_key(|x| Self::backing_for((x.1).0).defensive_unwrap_or_else(Zero::zero))
-		// 	{
-		// 		let (proposal_index, proposal) = proposals_index.swap_remove(winner_index);
-		// 		<ProposalIndex<T>>::put(proposals_index);
-		// 		//refund depositors
-		// 		// if let Some((depositors, depositdeposit)) = <DepositOf<T>>::take(proposal_index)
-		// 		// { 	for d in &depositors {
-		// 		// 		T::Currency::unreserve(d, deposit);
-		// 		// 	}
-		// 		// }
-		// 	}
-		// }
 	}
 }

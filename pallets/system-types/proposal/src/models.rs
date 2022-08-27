@@ -11,21 +11,20 @@ pub enum Content {
 }
 
 #[derive(Debug, Clone, Encode, Decode, Eq, PartialEq, TypeInfo)]
-pub enum Target<AccountId> {
+pub enum Target<CouncilId> {
 	None,
-	Council(Vec<AccountId>),
-	Electorate(Vec<AccountId>),
+	Council(Vec<CouncilId>),
 }
 
-impl<AccountId> Default for Target<AccountId> {
+impl<CouncilId> Default for Target<CouncilId> {
 	fn default() -> Self {
 		Self::None
 	}
 }
 
 #[derive(Clone, Encode, Decode, Default, Debug, PartialEq, TypeInfo)]
-pub struct Proposal<AccountId> {
-	pub target: Target<AccountId>,
+pub struct Proposal<CouncilId> {
+	pub target: Target<CouncilId>,
 	pub content: Vec<u8>, // Content
 }
 
