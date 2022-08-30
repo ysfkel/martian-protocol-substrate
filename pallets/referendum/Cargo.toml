@@ -13,11 +13,14 @@ frame-support = {version = "4.0.0-dev", default-features = false, git = "https:/
 frame-system = {version = "4.0.0-dev", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.27"}
 num-traits = {version = "0.2.15", default-features = false}
 pallet-math = {path = "../math", default-features = false}
+pallet-proposal = {path = "../proposal", default-features = false, optional = true, version = "0.1.0"}
 proposal-types = {default-features = false, version = "0.1.0", path = "../system-types/proposal"}
 scale-info = {version = "2.1.1", default-features = false, features = ["derive"]}
 sp-runtime = {default-features = false, version = "6.0.0", git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.27"}
 sp-std = {git = "https://github.com/paritytech/substrate", default-features = false, branch = "polkadot-v0.9.27"}
+
 [dev-dependencies]
+pallet-balances = {git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.27"}
 sp-core = {default-features = false, version = "6.0.0", git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.27"}
 sp-io = {default-features = false, version = "6.0.0", git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.27"}
 
@@ -30,4 +33,5 @@ std = [
   "frame-support/std",
   "frame-system/std",
   "sp-std/std",
+  "pallet-proposal/std",
 ]

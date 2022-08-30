@@ -1,5 +1,12 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 pub use pallet::*;
+#[cfg(test)]
+mod mock;
+
+#[cfg(test)]
+mod test;
+
+use frame_support::traits::{LockableCurrency, ReservableCurrency};
 
 #[frame_support::pallet]
 pub mod pallet {
@@ -12,7 +19,10 @@ pub mod pallet {
 	use frame_system::pallet_prelude::*;
 	use num_traits::One;
 	use pallet_math::SafeAdd;
-	use sp_runtime::traits::{CheckedAdd, MaybeDisplay};
+	use sp_runtime::{
+		traits::{CheckedAdd, MaybeDisplay},
+		DispatchError,
+	};
 
 	#[pallet::pallet]
 	#[pallet::without_storage_info]
@@ -20,6 +30,11 @@ pub mod pallet {
 
 	#[pallet::config]
 	pub trait Config: frame_system::Config {
+		type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
+
+		type Currency: ReservableCurrency<Self::AccountId>
+			+ LockableCurrency<Self::AccountId, Moment = Self::BlockNumber>;
+
 		type ProposalId: AddAssign
 			+ FullCodec
 			+ MaxEncodedLen
@@ -55,6 +70,14 @@ pub mod pallet {
 		>;
 	}
 
+	#[pallet::event]
+	pub enum Event<T: Config> {}
+
+	#[pallet::error]
+	pub enum Error<T> {
+		CouldNotRetrieveProposal,
+	}
+
 	#[pallet::storage]
 	#[pallet::getter(fn proposals)]
 	pub type Proposals<T: Config> =
@@ -72,23 +95,14 @@ pub mod pallet {
 			origin: OriginFor<T>,
 			council_id: T::CouncilId,
 		) -> DispatchResultWithPostInfo {
-			if let Some(proposal) = Self::get_proposal(council_id) {
-				<Proposals<T>>::insert(council_id, proposal);
-			}
 			// - todo - caller must be council
+			let proposal = T::ProposalSource::retrieve_highest_valued_proposal(council_id)
+				.map_err(|_| Error::<T>::CouldNotRetrieveProposal)?;
 
+			<Proposals<T>>::insert(council_id, proposal);
 			Ok(().into())
 		}
 	}
 
-	impl<T: Config> Pallet<T> {
-		fn get_proposal(council_id: T::CouncilId) -> Option<Proposal<T::AccountId>> {
-			if let Some(proposal) = T::ProposalSource::retrieve_highest_valued_proposal(council_id)
-			{
-				return Some(proposal)
-			}
-
-			None
-		}
-	}
+	impl<T: Config> Pallet<T> {}
 }

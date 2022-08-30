@@ -1,6 +1,9 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
+use std::error::Error;
+
 use crate::models::Proposal;
+use sp_runtime::DispatchError;
 
 pub trait ProposalTrait {
 	type ProposalId;
@@ -12,5 +15,5 @@ pub trait ProposalTrait {
 	) -> Option<Proposal<Self::CouncilId>>;
 	fn retrieve_highest_valued_proposal(
 		council_id: Self::CouncilId,
-	) -> Option<Proposal<Self::CouncilId>>;
+	) -> Result<Proposal<Self::CouncilId>, DispatchError>;
 }

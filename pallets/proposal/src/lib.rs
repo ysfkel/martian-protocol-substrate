@@ -150,6 +150,7 @@ pub mod pallet {
 		NoneValue,
 		ProposalNotFound,
 		NoProposalFound,
+		NoProposalToRemove,
 	}
 
 	// #[pallet::hooks]
@@ -261,13 +262,14 @@ impl<T: Config> ProposalTrait for Pallet<T> {
 
 	fn retrieve_highest_valued_proposal(
 		council_id: T::CouncilId,
-	) -> Option<Proposal<Self::CouncilId>> {
+	) -> Result<Proposal<Self::CouncilId>, DispatchError> {
 		let mut proposals_index = Self::proposal_index(council_id.clone());
 		if let Some((winner_index, _)) = proposals_index.iter().enumerate().max_by_key(|x| {
 			Self::backing_for(council_id.clone(), (x.1).0).defensive_unwrap_or_else(Zero::zero)
 		}) {
 			let (proposal_index, _) = proposals_index.swap_remove(winner_index);
 			<ProposalIndex<T>>::insert(council_id.clone(), proposals_index.clone());
+
 			if let Some((depositors, deposit)) =
 				<DepositOf<T>>::take(council_id.clone(), proposal_index.clone())
 			{
@@ -276,15 +278,17 @@ impl<T: Config> ProposalTrait for Pallet<T> {
 				}
 			}
 
-			let proposal = Self::proposals(council_id.clone(), proposal_index.clone());
+			if let Some(proposal) = Self::proposals(council_id.clone(), proposal_index.clone()) {
+				<Proposals<T>>::remove(council_id, proposal_index.clone());
 
-			<Proposals<T>>::remove(council_id, proposal_index.clone());
+				Self::deposit_event(Event::<T>::HighestValuedProposalRemoved { proposal_index });
 
-			Self::deposit_event(Event::<T>::HighestValuedProposalRemoved { proposal_index });
-
-			proposal
+				Ok(proposal)
+			} else {
+				Err(DispatchError::CannotLookup)
+			}
 		} else {
-			None
+			Err(DispatchError::CannotLookup)
 		}
 	}
 }
