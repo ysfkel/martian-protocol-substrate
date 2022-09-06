@@ -1,6 +1,5 @@
-use crate::{Conviction, Delegations};
+use crate::{delegations, Conviction, Delegations};
 use codec::{Decode, Encode, EncodeLike, Input, Output};
-use frame_support::inherent::BlockT;
 use scale_info::TypeInfo;
 use sp_runtime::{
 	traits::{Saturating, Zero},
@@ -137,6 +136,52 @@ impl<Balance: Default, AccountId, BlockNumber: Zero, ReferendumIndex> Default
 			votes: Vec::new(),
 			delegations: Default::default(),
 			prior: PriorLock(Zero::zero(), Default::default()),
+		}
+	}
+}
+
+impl<
+		Balance: Saturating + Ord + Zero + Copy,
+		BlockNumber: Ord + Copy + Zero,
+		AccountId,
+		ReferendumIndex,
+	> Voting<Balance, AccountId, BlockNumber, ReferendumIndex>
+{
+	pub fn rejig(&mut self, now: BlockNumber) {
+		match self {
+			Voting::Direct { prior, .. } => prior,
+			Voting::Delegating { prior, .. } => prior,
+		}
+		.rejig(now);
+	}
+
+	pub fn locked_balance(&self) -> Balance {
+		match self {
+			Voting::Direct { votes, prior, .. } =>
+				votes.iter().map(|i| i.1.balance()).fold(prior.locked(), |a, i| a.max(i)),
+			Voting::Delegating { balance, target, conviction, delegations, prior, .. } =>
+				*balance.max(&prior.locked()),
+		}
+	}
+
+	pub fn set_common(
+		&mut self,
+		delegations: Delegations<Balance>,
+		prior: PriorLock<BlockNumber, Balance>,
+	) {
+		let (d, p, ..) = match self {
+			Voting::Direct { ref mut delegations, ref mut prior, .. } => (delegations, prior),
+			Voting::Delegating { ref mut delegations, ref mut prior, .. } => (delegations, prior),
+		};
+
+		*d = delegations;
+		*p = prior;
+	}
+
+	pub fn prior(&self) -> &PriorLock<BlockNumber, Balance> {
+		match self {
+			Voting::Direct { prior, .. } => prior,
+			Voting::Delegating { balance, target, conviction, delegations, prior, .. } => prior,
 		}
 	}
 }

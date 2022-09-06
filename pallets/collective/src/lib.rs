@@ -9,13 +9,13 @@ mod mock;
 mod test;
 //use frame_support::traits::{defensive_prelude::*, Currency, LockableCurrency,
 // ReservableCurrency};
-pub type CouncilId<T> = <T as frame_system::Config>::AccountId;
+pub type CollectiveId<T> = <T as frame_system::Config>::AccountId;
 
 #[frame_support::pallet]
 pub mod pallet {
 	use super::*;
 	use codec::FullCodec;
-	use council_types::models::Council;
+	use collective_types::models::Collective;
 	use frame_support::pallet_prelude::*;
 	use frame_system::pallet_prelude::*;
 	use sp_runtime::traits::MaybeDisplay;
@@ -28,7 +28,7 @@ pub mod pallet {
 	#[pallet::config]
 	pub trait Config: frame_system::Config {
 		type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
-		type CouncilId: FullCodec
+		type CollectiveId: FullCodec
 			+ Parameter
 			+ Member
 			+ MaybeSerializeDeserialize
@@ -43,14 +43,14 @@ pub mod pallet {
 	}
 
 	#[pallet::storage]
-	#[pallet::getter(fn councils)]
-	pub type Councils<T: Config> =
-		StorageMap<_, Twox64Concat, CouncilId<T>, BTreeSet<T::AccountId>, ValueQuery>;
+	#[pallet::getter(fn collectives)]
+	pub type Collectives<T: Config> =
+		StorageMap<_, Twox64Concat, CollectiveId<T>, BTreeSet<T::AccountId>, ValueQuery>;
 
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {
-		MembersAdded { council: CouncilId<T>, members: Vec<T::AccountId> },
+		MembersAdded { collective: CollectiveId<T>, members: Vec<T::AccountId> },
 	}
 	#[pallet::error]
 	pub enum Error<T> {
@@ -66,21 +66,21 @@ pub mod pallet {
 		) -> DispatchResultWithPostInfo {
 			let who = ensure_signed(origin)?;
 
-			let mut council = Self::councils(&who);
+			let mut collective = Self::collectives(&who);
 
-			let new_members: Vec<_> = members.difference(&council).cloned().collect();
+			let new_members: Vec<_> = members.difference(&collective).cloned().collect();
 
-			if council.len() > 0 {
+			if collective.len() > 0 {
 				ensure!(new_members.len() > 0, Error::<T>::NoMembersToAdd);
 			}
 
 			let mut m = BTreeSet::from_iter(new_members.clone());
 
-			council.append(&mut m);
+			collective.append(&mut m);
 
-			<Councils<T>>::insert(&who, &council);
+			<Collectives<T>>::insert(&who, &collective);
 
-			Self::deposit_event(Event::<T>::MembersAdded { council: who, members: new_members });
+			Self::deposit_event(Event::<T>::MembersAdded { collective: who, members: new_members });
 
 			Ok(().into())
 		}

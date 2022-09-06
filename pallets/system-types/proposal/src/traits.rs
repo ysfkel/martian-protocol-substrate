@@ -8,12 +8,12 @@ use sp_runtime::DispatchError;
 pub trait ProposalTrait {
 	type ProposalId;
 	type AccountId;
-	type CouncilId;
+	type CollectiveId;
 	fn proposal(
-		council_id: Self::CouncilId,
+		collective_id: Self::CollectiveId,
 		index: Self::ProposalId,
-	) -> Option<Proposal<Self::CouncilId>>;
+	) -> Option<Proposal<Self::CollectiveId>>;
 	fn retrieve_highest_valued_proposal(
-		council_id: Self::CouncilId,
-	) -> Result<Proposal<Self::CouncilId>, DispatchError>;
+		collective_id: Self::CollectiveId,
+	) -> Result<Proposal<Self::CollectiveId>, DispatchError>;
 }

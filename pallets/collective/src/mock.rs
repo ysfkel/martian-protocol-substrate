@@ -1,5 +1,5 @@
 use super::*;
-use crate as pallet_council;
+use crate as pallet_collective;
 use frame_support::{
 	parameter_types,
 	traits::{ConstU16, ConstU64},
@@ -22,13 +22,13 @@ frame_support::construct_runtime!(
 		UncheckedExtrinsic = UncheckedExtrinsic, {
 			System: frame_system::{Pallet, Config, Storage, Event<T>},
 			Balances: pallet_balances::{Pallet, Call, Config<T>, Storage, Event<T>},
-			Council: pallet_council::{Pallet, Call,  Storage, Event<T>},
+			Collective: pallet_collective::{Pallet, Call,  Storage, Event<T>},
 		}
 );
 
-impl pallet_council::Config for Test {
+impl pallet_collective::Config for Test {
 	type Event = Event;
-	type CouncilId = u128; //<Test as frame_system::Config>::AccountId;
+	type CollectiveId = u128; //<Test as frame_system::Config>::AccountId;
 }
 
 parameter_types! {

@@ -1,6 +1,6 @@
 [package]
 edition = "2021"
-name = "pallet-council"
+name = "pallet-collective"
 version = "0.1.0"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -8,7 +8,7 @@ version = "0.1.0"
 codec = {package = "parity-scale-codec", version = "3.0.0", default-features = false, features = [
   "derive",
 ]}
-council-types = {version = "0.1.0", default-features = false, path = "../system-types/council"}
+collective-types = {version = "0.1.0", default-features = false, path = "../system-types/collective"}
 frame-support = {version = "4.0.0-dev", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.27"}
 frame-system = {version = "4.0.0-dev", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.27"}
 

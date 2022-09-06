@@ -1,8 +1,10 @@
 [workspace]
 members = [
-    "node",
-    "pallets/template",
-    "runtime",
+  "node",
+  "pallets/proposal",
+  "pallets/referendum",
+  "pallets/collective",
+  "runtime",
 ]
 [profile.release]
 panic = "unwind"

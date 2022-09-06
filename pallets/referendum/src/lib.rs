@@ -50,7 +50,7 @@ pub mod pallet {
 			+ SafeAdd
 			+ Into<u128>;
 
-		type CouncilId: FullCodec
+		type CollectiveId: FullCodec
 			+ Parameter
 			+ Member
 			+ MaybeSerializeDeserialize
@@ -66,7 +66,7 @@ pub mod pallet {
 		type ProposalSource: ProposalTrait<
 			AccountId = Self::AccountId,
 			ProposalId = Self::ProposalId,
-			CouncilId = Self::CouncilId,
+			CollectiveId = Self::CollectiveId,
 		>;
 	}
 
@@ -81,25 +81,25 @@ pub mod pallet {
 	#[pallet::storage]
 	#[pallet::getter(fn proposals)]
 	pub type Proposals<T: Config> =
-		StorageMap<_, Twox64Concat, T::CouncilId, Proposal<T::CouncilId>, OptionQuery>;
+		StorageMap<_, Twox64Concat, T::CollectiveId, Proposal<T::CollectiveId>, OptionQuery>;
 
 	// #[pallet::storage]
 	// #[pallet::getter(fn referendums)]
 	// pub type Referendums<T: Config> =
-	// 	StorageMap<_, Twox64Concat, T::CouncilId, Referendum<T::CouncilId>, OptionQuery>;
+	// 	StorageMap<_, Twox64Concat, T::CollectiveId, Referendum<T::CollectiveId>, OptionQuery>;
 
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
 		#[pallet::weight(100_000)]
 		pub fn start_referendum_by_value(
 			origin: OriginFor<T>,
-			council_id: T::CouncilId,
+			collective_id: T::CollectiveId,
 		) -> DispatchResultWithPostInfo {
-			// - todo - caller must be council
-			let proposal = T::ProposalSource::retrieve_highest_valued_proposal(council_id)
+			// - todo - caller must be collective
+			let proposal = T::ProposalSource::retrieve_highest_valued_proposal(collective_id)
 				.map_err(|_| Error::<T>::CouldNotRetrieveProposal)?;
 
-			<Proposals<T>>::insert(council_id, proposal);
+			<Proposals<T>>::insert(collective_id, proposal);
 			Ok(().into())
 		}
 	}

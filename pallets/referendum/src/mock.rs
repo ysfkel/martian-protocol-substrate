@@ -75,7 +75,7 @@ impl pallet_referendum::Config for Test {
 	type Event = Event;
 	type Currency = Balances;
 	type ProposalId = u128;
-	type CouncilId = u128;
+	type CollectiveId = u128;
 	type ProposalSource = Proposal;
 }
 
@@ -83,7 +83,7 @@ impl pallet_proposal::Config for Test {
 	type Event = Event;
 	type Currency = Balances;
 	type ProposalId = u128;
-	type CouncilId = u128;
+	type CollectiveId = u128;
 }
 
 // Build genesis storage according to the mock runtime.

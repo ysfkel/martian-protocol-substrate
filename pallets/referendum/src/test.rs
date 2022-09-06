@@ -15,7 +15,7 @@ fn can_start_new_referendum() {
 			1,
 			"test".as_bytes().to_vec(),
 			10_u64,
-			Target::Council(vec![1, 2, 3])
+			Target::Collective(vec![1, 2, 3])
 		));
 		assert_ok!(Referendum::start_referendum_by_value(Origin::signed(1), 1));
 		assert_eq!(Referendum::proposals(1).unwrap().content, "test".as_bytes().to_vec());

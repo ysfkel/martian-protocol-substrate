@@ -61,7 +61,7 @@ pub mod pallet {
 			+ SafeAdd
 			+ Zero
 			+ From<u128>;
-		type CouncilId: FullCodec
+		type CollectiveId: FullCodec
 			+ Parameter
 			+ Member
 			+ MaybeSerializeDeserialize
@@ -78,31 +78,36 @@ pub mod pallet {
 	#[pallet::storage]
 	#[pallet::getter(fn proposal_count)]
 	pub type ProposalCount<T: Config> =
-		StorageMap<_, Twox64Concat, T::CouncilId, T::ProposalId, ValueQuery>;
+		StorageMap<_, Twox64Concat, T::CollectiveId, T::ProposalId, ValueQuery>;
 
 	#[pallet::storage]
 	#[pallet::getter(fn proposals)]
 	pub type Proposals<T: Config> = StorageDoubleMap<
 		_,
 		Twox64Concat,
-		T::CouncilId,
+		T::CollectiveId,
 		Twox64Concat,
 		T::ProposalId,
-		Proposal<T::CouncilId>,
+		Proposal<T::CollectiveId>,
 		OptionQuery,
 	>;
 
 	#[pallet::storage]
 	#[pallet::getter(fn proposal_index)]
-	pub type ProposalIndex<T: Config> =
-		StorageMap<_, Twox64Concat, T::CouncilId, Vec<(T::ProposalId, T::AccountId)>, ValueQuery>;
+	pub type ProposalIndex<T: Config> = StorageMap<
+		_,
+		Twox64Concat,
+		T::CollectiveId,
+		Vec<(T::ProposalId, T::AccountId)>,
+		ValueQuery,
+	>;
 
 	#[pallet::storage]
 	#[pallet::getter(fn deposit_of)]
 	pub type DepositOf<T: Config> = StorageDoubleMap<
 		_,
 		Twox64Concat,
-		T::CouncilId,
+		T::CollectiveId,
 		Twox64Concat,
 		T::ProposalId,
 		(Vec<T::AccountId>, BalanceOf<T>),
@@ -137,7 +142,7 @@ pub mod pallet {
 		Endorsed {
 			account: T::AccountId,
 			proposal_index: T::ProposalId,
-			council_id: T::CouncilId,
+			collective_id: T::CollectiveId,
 			deposit: BalanceOf<T>,
 		},
 		HighestValuedProposalRemoved {
@@ -166,23 +171,23 @@ pub mod pallet {
 		#[pallet::weight(100_000)]
 		pub fn create_proposal(
 			origin: OriginFor<T>,
-			council_id: T::CouncilId,
+			collective_id: T::CollectiveId,
 			content: Vec<u8>,
 			#[pallet::compact] value: BalanceOf<T>,
-			target: Target<T::CouncilId>,
+			target: Target<T::CollectiveId>,
 		) -> DispatchResultWithPostInfo {
 			let who = ensure_signed(origin)?;
 			T::Currency::reserve(&who, value)?;
 			let mut proposal_index: T::ProposalId = T::ProposalId::zero();
 			match target.clone() {
-				Target::Council(_) => {
+				Target::Collective(_) => {
 					proposal_index =
-						Self::_create_proposal(content, council_id.clone(), &who, target)?;
+						Self::_create_proposal(content, collective_id.clone(), &who, target)?;
 				},
 				Target::None => {},
 			}
 
-			<DepositOf<T>>::insert(council_id, proposal_index, (&[&who][..], value));
+			<DepositOf<T>>::insert(collective_id, proposal_index, (&[&who][..], value));
 			Self::deposit_event(Event::<T>::ProposalCreated { proposal_index, deposit: value });
 			Ok(().into())
 		}
@@ -190,21 +195,21 @@ pub mod pallet {
 		#[pallet::weight(100_000)]
 		pub fn endorse(
 			origin: OriginFor<T>,
-			council_id: T::CouncilId,
+			collective_id: T::CollectiveId,
 			#[pallet::compact] proposal_id: T::ProposalId,
 		) -> DispatchResultWithPostInfo {
 			// do checks
 			let who = ensure_signed(origin)?;
 			let mut deposit_of: (Vec<T::AccountId>, BalanceOf<T>) =
-				Self::deposit_of(council_id.clone(), proposal_id)
+				Self::deposit_of(collective_id.clone(), proposal_id)
 					.ok_or(Error::<T>::ProposalNotFound)?;
 			T::Currency::reserve(&who, deposit_of.1)?;
 			deposit_of.0.push(who.clone());
 			let deposit = deposit_of.1;
-			<DepositOf<T>>::insert(council_id.clone(), proposal_id.clone(), deposit_of);
+			<DepositOf<T>>::insert(collective_id.clone(), proposal_id.clone(), deposit_of);
 			Self::deposit_event(Event::<T>::Endorsed {
 				account: who,
-				council_id,
+				collective_id,
 				proposal_index: proposal_id,
 				deposit,
 			});
@@ -216,19 +221,22 @@ pub mod pallet {
 	impl<T: Config> Pallet<T> {
 		pub fn _create_proposal(
 			content: Vec<u8>,
-			council_id: T::CouncilId,
+			collective_id: T::CollectiveId,
 			who: &T::AccountId,
-			target: Target<T::CouncilId>,
+			target: Target<T::CollectiveId>,
 		) -> Result<T::ProposalId, DispatchError> {
 			let id = ProposalCount::<T>::try_mutate(
-				council_id.clone(),
+				collective_id.clone(),
 				|proposal_count| -> Result<T::ProposalId, DispatchError> {
 					*proposal_count = proposal_count.safe_add(&T::ProposalId::one())?;
 
-					ProposalIndex::<T>::append(council_id.clone(), (proposal_count.clone(), &who));
+					ProposalIndex::<T>::append(
+						collective_id.clone(),
+						(proposal_count.clone(), &who),
+					);
 
 					<Proposals<T>>::insert(
-						council_id,
+						collective_id,
 						proposal_count.clone(),
 						Proposal { content, target },
 					);
@@ -239,10 +247,10 @@ pub mod pallet {
 		}
 
 		pub fn backing_for(
-			council_id: T::CouncilId,
+			collective_id: T::CollectiveId,
 			proposal_index: T::ProposalId,
 		) -> Option<BalanceOf<T>> {
-			Self::deposit_of(council_id, proposal_index)
+			Self::deposit_of(collective_id, proposal_index)
 				.map(|(accounts, deposit)| deposit.saturating_mul((accounts.len() as u32).into()))
 		}
 	}
@@ -251,35 +259,35 @@ pub mod pallet {
 impl<T: Config> ProposalTrait for Pallet<T> {
 	type ProposalId = T::ProposalId;
 	type AccountId = T::AccountId;
-	type CouncilId = T::CouncilId;
+	type CollectiveId = T::CollectiveId;
 
 	fn proposal(
-		council_id: T::CouncilId,
+		collective_id: T::CollectiveId,
 		proposal_index: Self::ProposalId,
-	) -> Option<Proposal<Self::CouncilId>> {
-		Self::proposals(council_id, proposal_index)
+	) -> Option<Proposal<Self::CollectiveId>> {
+		Self::proposals(collective_id, proposal_index)
 	}
 
 	fn retrieve_highest_valued_proposal(
-		council_id: T::CouncilId,
-	) -> Result<Proposal<Self::CouncilId>, DispatchError> {
-		let mut proposals_index = Self::proposal_index(council_id.clone());
+		collective_id: T::CollectiveId,
+	) -> Result<Proposal<Self::CollectiveId>, DispatchError> {
+		let mut proposals_index = Self::proposal_index(collective_id.clone());
 		if let Some((winner_index, _)) = proposals_index.iter().enumerate().max_by_key(|x| {
-			Self::backing_for(council_id.clone(), (x.1).0).defensive_unwrap_or_else(Zero::zero)
+			Self::backing_for(collective_id.clone(), (x.1).0).defensive_unwrap_or_else(Zero::zero)
 		}) {
 			let (proposal_index, _) = proposals_index.swap_remove(winner_index);
-			<ProposalIndex<T>>::insert(council_id.clone(), proposals_index.clone());
+			<ProposalIndex<T>>::insert(collective_id.clone(), proposals_index.clone());
 
 			if let Some((depositors, deposit)) =
-				<DepositOf<T>>::take(council_id.clone(), proposal_index.clone())
+				<DepositOf<T>>::take(collective_id.clone(), proposal_index.clone())
 			{
 				for d in &depositors {
 					T::Currency::unreserve(&d, deposit);
 				}
 			}
 
-			if let Some(proposal) = Self::proposals(council_id.clone(), proposal_index.clone()) {
-				<Proposals<T>>::remove(council_id, proposal_index.clone());
+			if let Some(proposal) = Self::proposals(collective_id.clone(), proposal_index.clone()) {
+				<Proposals<T>>::remove(collective_id, proposal_index.clone());
 
 				Self::deposit_event(Event::<T>::HighestValuedProposalRemoved { proposal_index });
 
