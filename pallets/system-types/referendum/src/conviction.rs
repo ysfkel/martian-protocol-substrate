@@ -1,6 +1,10 @@
+use crate::Delegations;
 use codec::{Decode, Encode};
 use scale_info::TypeInfo;
-use sp_runtime::{traits::Bounded, RuntimeDebug};
+use sp_runtime::{
+	traits::{Bounded, CheckedDiv, CheckedMul, Zero},
+	RuntimeDebug,
+};
 
 use sp_std::{prelude::*, result::Result};
 
@@ -71,6 +75,17 @@ impl Conviction {
 			Conviction::Locked5x => 16,
 			Conviction::Locked6x => 32,
 		}
+	}
+
+	pub fn votes<B: From<u8> + Zero + Copy + CheckedMul + CheckedDiv + Bounded>(
+		self,
+		capital: B,
+	) -> Delegations<B> {
+		let votes = match self {
+			Conviction::None => capital.checked_div(&10u8.into()).unwrap_or_else(Zero::zero),
+			x => capital.checked_mul(&u8::from(x).into()).unwrap_or_else(B::max_value),
+		};
+		Delegations { votes, capital }
 	}
 }
 

@@ -46,6 +46,7 @@ pub mod pallet {
 		/// Event documentation should end with an array that provides descriptive names for event
 		/// parameters. [something, who]
 		SomethingStored(u32, T::AccountId),
+		AssetCreated(AssetId),
 	}
 
 	// Errors inform users that something went wrong.
