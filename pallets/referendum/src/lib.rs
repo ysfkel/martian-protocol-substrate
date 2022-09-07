@@ -90,6 +90,14 @@ pub mod pallet {
 
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
+		#[pallet::weight]
+		pub fn vote(
+			origin: OriginFor<T>,
+			value: T::Balance,
+			collection_id: CollectiveId,
+		) -> DispatchResultWithPostInfo {
+		}
+
 		#[pallet::weight(100_000)]
 		pub fn start_referendum_by_value(
 			origin: OriginFor<T>,

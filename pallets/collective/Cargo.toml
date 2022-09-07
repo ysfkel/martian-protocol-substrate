@@ -28,4 +28,5 @@ std = [
   "frame-support/std",
   "frame-system/std",
   "sp-std/std",
+  "collective-types/std",
 ]

@@ -73,7 +73,7 @@ impl system::Config for Test {
 impl pallet_proposal::Config for Test {
 	type Event = Event;
 	type Currency = Balances;
-	type ProposalId = u32;
+	type ProposalId = u128;
 	type CollectiveId = u128;
 }
 

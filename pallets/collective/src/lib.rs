@@ -7,15 +7,14 @@ use sp_std::{collections::btree_set::BTreeSet, fmt::Debug, iter::FromIterator, p
 mod mock;
 #[cfg(test)]
 mod test;
-//use frame_support::traits::{defensive_prelude::*, Currency, LockableCurrency,
-// ReservableCurrency};
+
 pub type CollectiveId<T> = <T as frame_system::Config>::AccountId;
 
 #[frame_support::pallet]
 pub mod pallet {
 	use super::*;
 	use codec::FullCodec;
-	use collective_types::models::Collective;
+	use collective_types::models::{Collective, ConvictionType};
 	use frame_support::pallet_prelude::*;
 	use frame_system::pallet_prelude::*;
 	use sp_runtime::traits::MaybeDisplay;
@@ -44,8 +43,13 @@ pub mod pallet {
 
 	#[pallet::storage]
 	#[pallet::getter(fn collectives)]
-	pub type Collectives<T: Config> =
-		StorageMap<_, Twox64Concat, CollectiveId<T>, BTreeSet<T::AccountId>, ValueQuery>;
+	pub type Collectives<T: Config> = StorageMap<
+		_,
+		Twox64Concat,
+		CollectiveId<T>,
+		(BTreeSet<T::AccountId>, ConvictionType),
+		ValueQuery,
+	>;
 
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
@@ -68,15 +72,15 @@ pub mod pallet {
 
 			let mut collective = Self::collectives(&who);
 
-			let new_members: Vec<_> = members.difference(&collective).cloned().collect();
+			let new_members: Vec<_> = members.difference(&collective.0).cloned().collect();
 
-			if collective.len() > 0 {
+			if collective.0.len() > 0 {
 				ensure!(new_members.len() > 0, Error::<T>::NoMembersToAdd);
 			}
 
 			let mut m = BTreeSet::from_iter(new_members.clone());
 
-			collective.append(&mut m);
+			collective.0.append(&mut m);
 
 			<Collectives<T>>::insert(&who, &collective);
 

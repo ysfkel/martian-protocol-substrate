@@ -7,8 +7,7 @@ use sp_runtime::{
 	traits::{AtLeast32BitUnsigned, CheckedAdd, Saturating, Zero},
 	DispatchError,
 };
-use sp_std::prelude::*;
-
+use sp_std::{collections::btree_set::BTreeSet, prelude::*};
 #[cfg(test)]
 mod mock;
 #[cfg(test)]
@@ -56,8 +55,8 @@ pub mod pallet {
 			+ TypeInfo
 			+ AtLeast32BitUnsigned
 			+ SafeAdd
-			+ Zero
-			+ From<u128>;
+			+ Zero;
+		// + From<u128>;
 		type CollectiveId: FullCodec
 			+ Parameter
 			+ Member
@@ -171,7 +170,7 @@ pub mod pallet {
 			collective_id: T::CollectiveId,
 			content: Vec<u8>,
 			#[pallet::compact] value: BalanceOf<T>,
-			target: Vec<T::CollectiveId>,
+			target: BTreeSet<T::CollectiveId>,
 		) -> DispatchResultWithPostInfo {
 			let who = ensure_signed(origin)?;
 			T::Currency::reserve(&who, value)?;
@@ -214,7 +213,7 @@ pub mod pallet {
 			content: Vec<u8>,
 			collective_id: T::CollectiveId,
 			who: &T::AccountId,
-			council: Vec<T::CollectiveId>,
+			council: BTreeSet<T::CollectiveId>,
 		) -> Result<T::ProposalId, DispatchError> {
 			let id = ProposalCount::<T>::try_mutate(
 				collective_id.clone(),
