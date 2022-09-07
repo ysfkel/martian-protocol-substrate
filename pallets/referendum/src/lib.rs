@@ -93,9 +93,11 @@ pub mod pallet {
 		#[pallet::weight]
 		pub fn vote(
 			origin: OriginFor<T>,
-			value: T::Balance,
-			collection_id: CollectiveId,
 		) -> DispatchResultWithPostInfo {
+			/**
+			 * 1. 
+			 */
+			
 		}
 
 		#[pallet::weight(100_000)]
