@@ -2,10 +2,7 @@
 
 use frame_support::traits::{defensive_prelude::*, Currency, LockableCurrency, ReservableCurrency};
 pub use pallet::*;
-use proposal_types::{
-	models::{Proposal, Target},
-	traits::ProposalTrait,
-};
+use proposal_types::{models::Proposal, traits::ProposalTrait};
 use sp_runtime::{
 	traits::{AtLeast32BitUnsigned, CheckedAdd, Saturating, Zero},
 	DispatchError,
@@ -174,18 +171,12 @@ pub mod pallet {
 			collective_id: T::CollectiveId,
 			content: Vec<u8>,
 			#[pallet::compact] value: BalanceOf<T>,
-			target: Target<T::CollectiveId>,
+			target: Vec<T::CollectiveId>,
 		) -> DispatchResultWithPostInfo {
 			let who = ensure_signed(origin)?;
 			T::Currency::reserve(&who, value)?;
-			let mut proposal_index: T::ProposalId = T::ProposalId::zero();
-			match target.clone() {
-				Target::Collective(_) => {
-					proposal_index =
-						Self::_create_proposal(content, collective_id.clone(), &who, target)?;
-				},
-				Target::None => {},
-			}
+			let proposal_index =
+				Self::_create_proposal(content, collective_id.clone(), &who, target)?;
 
 			<DepositOf<T>>::insert(collective_id, proposal_index, (&[&who][..], value));
 			Self::deposit_event(Event::<T>::ProposalCreated { proposal_index, deposit: value });
@@ -223,7 +214,7 @@ pub mod pallet {
 			content: Vec<u8>,
 			collective_id: T::CollectiveId,
 			who: &T::AccountId,
-			target: Target<T::CollectiveId>,
+			council: Vec<T::CollectiveId>,
 		) -> Result<T::ProposalId, DispatchError> {
 			let id = ProposalCount::<T>::try_mutate(
 				collective_id.clone(),
@@ -238,7 +229,7 @@ pub mod pallet {
 					<Proposals<T>>::insert(
 						collective_id,
 						proposal_count.clone(),
-						Proposal { content, target },
+						Proposal { content, council },
 					);
 					Ok(*proposal_count)
 				},
