@@ -170,12 +170,12 @@ pub mod pallet {
 			collective_id: T::CollectiveId,
 			content: Vec<u8>,
 			#[pallet::compact] value: BalanceOf<T>,
-			target: BTreeSet<T::CollectiveId>,
+			collective: T::CollectiveId,
 		) -> DispatchResultWithPostInfo {
 			let who = ensure_signed(origin)?;
 			T::Currency::reserve(&who, value)?;
 			let proposal_index =
-				Self::_create_proposal(content, collective_id.clone(), &who, target)?;
+				Self::_create_proposal(content, collective_id.clone(), &who, collective)?;
 
 			<DepositOf<T>>::insert(collective_id, proposal_index, (&[&who][..], value));
 			Self::deposit_event(Event::<T>::ProposalCreated { proposal_index, deposit: value });
@@ -213,7 +213,7 @@ pub mod pallet {
 			content: Vec<u8>,
 			collective_id: T::CollectiveId,
 			who: &T::AccountId,
-			council: BTreeSet<T::CollectiveId>,
+			collecive: T::CollectiveId,
 		) -> Result<T::ProposalId, DispatchError> {
 			let id = ProposalCount::<T>::try_mutate(
 				collective_id.clone(),
@@ -228,7 +228,7 @@ pub mod pallet {
 					<Proposals<T>>::insert(
 						collective_id,
 						proposal_count.clone(),
-						Proposal { content, council },
+						Proposal { content, collecive },
 					);
 					Ok(*proposal_count)
 				},

@@ -22,11 +22,12 @@ pub mod pallet {
 	use proposal_types::{models::Proposal, traits::ProposalTrait};
 	use referendum_types::{Referendum, ReferendumStatus};
 	use sp_runtime::{
-		traits::{AtLeast32BitUnsigned, CheckedAdd, MaybeDisplay, Zero},
+		traits::{AtLeast32BitUnsigned, CheckedAdd, MaybeDisplay, Saturating, Zero},
 		DispatchError,
 	};
 
 	#[pallet::pallet]
+	#[pallet::generate_store(pub(super) trait Store)]
 	#[pallet::without_storage_info]
 	pub struct Pallet<T>(_);
 
@@ -96,27 +97,17 @@ pub mod pallet {
 		CouldNotRetrieveProposal,
 	}
 
-	// #[pallet::storage]
-	// #[pallet::getter(fn proposals)]
-	// pub type Proposals<T: Config> =
-	// 	StorageMap<_, Twox64Concat, T::CollectiveId, Proposal<T::CollectiveId>, OptionQuery>;
-
-	// #[pallet::storage]
-	// #[pallet::getter(fn referendum_count)]
-	// pub type ProposalCount<T: Config> =
-	// 	StorageMap<_, Twox64Concat, T::CollectiveId, T::ReferendumId, ValueQuery>;
-
-	// #[pallet::storage]
-	// #[pallet::getter(fn proposals)]
-	// pub type Proposals<T: Config> = StorageMap<
-	// 	_,
-	// 	Twox64Concat,
-	// 	T::CollectiveId,
-	// 	Twox64Concat,
-	// 	T::ProposalId,
-	// 	Proposal<T::CollectiveId>,
-	// 	OptionQuery,
-	// >;
+	#[pallet::storage]
+	#[pallet::getter(fn proposals)]
+	pub type Proposals<T: Config> = StorageDoubleMap<
+		_,
+		Twox64Concat,
+		T::CollectiveId,
+		Twox64Concat,
+		T::ReferendumId,
+		Proposal<T::CollectiveId>,
+		OptionQuery,
+	>;
 
 	/// The next free referendum index, aka the number of referenda started so far.
 	#[pallet::storage]
@@ -132,12 +123,8 @@ pub mod pallet {
 		T::CollectiveId,
 		Twox64Concat,
 		T::ReferendumId,
-		//CollectiveId, ProposalId, BlockNumber, Balance
-		(
-			Referendum<T::CollectiveId, T::ProposalId, T::BlockNumber, BalanceOf<T>>,
-			Proposal<T::CollectiveId>,
-		),
-		OptionQuery,
+		Referendum<T::CollectiveId, T::ReferendumId, T::BlockNumber, BalanceOf<T>>,
+		ValueQuery,
 	>;
 
 	#[pallet::call]
@@ -154,8 +141,7 @@ pub mod pallet {
 			voting_priod: T::BlockNumber,
 		) -> DispatchResultWithPostInfo {
 			// - todo - caller must be collective
-
-			// <Proposals<T>>::insert(collective_id, proposal);
+			Self::create_referendum(collective_id, voting_priod);
 			Ok(().into())
 		}
 	}
@@ -170,22 +156,28 @@ pub mod pallet {
 				|referendum_count| -> Result<T::ReferendumId, DispatchError> {
 					*referendum_count = referendum_count.safe_add(&T::ReferendumId::one())?;
 
+					let referendum_id = referendum_count.clone();
+
 					/// create proposal
 					let proposal = T::ProposalSource::retrieve_highest_valued_proposal(collective_id)
 						.map_err(|_| Error::<T>::CouldNotRetrieveProposal)?;
 
 					let now = <frame_system::Pallet<T>>::block_number();
 
-					let status = ReferendumStatus::new(
-						collective_id,
-						referendum_count,
-						now.saturating_add(voting_priod),
-					);
-					<Referendums<T>>::insert(
-						collective_id,
-						referendum_count,
-						(Referendum::Ongoing(status), proposal),
-					);
+					let end = now.saturating_add(voting_priod);
+
+					let status = ReferendumStatus::<
+						T::CollectiveId,
+						T::ReferendumId,
+						T::BlockNumber,
+						BalanceOf<T>,
+					>::new(collective_id, referendum_id.clone(), end);
+
+					let item = Referendum::Ongoing(status);
+
+					<Referendums<T>>::insert(collective_id, referendum_id.clone(), item);
+
+					<Proposals<T>>::insert(collective_id, referendum_id, proposal);
 
 					Ok(*referendum_count)
 				},
