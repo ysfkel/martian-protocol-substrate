@@ -5,22 +5,24 @@ mod mock;
 
 #[cfg(test)]
 mod test;
+use frame_support::traits::{Currency, LockableCurrency, ReservableCurrency};
 
-use frame_support::traits::{LockableCurrency, ReservableCurrency};
+type BalanceOf<T> =
+	<<T as Config>::Currency as Currency<<T as frame_system::Config>::AccountId>>::Balance;
 
 #[frame_support::pallet]
 pub mod pallet {
 	use super::*;
-	use core::{fmt::Debug, ops::AddAssign};
-	use proposal_types::{models::Proposal, traits::ProposalTrait};
-
 	use codec::FullCodec;
+	use core::{fmt::Debug, ops::AddAssign};
 	use frame_support::pallet_prelude::*;
 	use frame_system::pallet_prelude::*;
 	use num_traits::One;
 	use pallet_math::SafeAdd;
+	use proposal_types::{models::Proposal, traits::ProposalTrait};
+	use referendum_types::{Referendum, ReferendumStatus};
 	use sp_runtime::{
-		traits::{CheckedAdd, MaybeDisplay},
+		traits::{AtLeast32BitUnsigned, CheckedAdd, MaybeDisplay, Zero},
 		DispatchError,
 	};
 
@@ -63,6 +65,22 @@ pub mod pallet {
 			+ Copy
 			+ TypeInfo;
 
+		type ReferendumId: AddAssign
+			+ FullCodec
+			+ MaxEncodedLen
+			+ One
+			+ Eq
+			+ PartialEq
+			+ Copy
+			+ MaybeSerializeDeserialize
+			+ CheckedAdd
+			+ Debug
+			+ Default
+			+ TypeInfo
+			+ AtLeast32BitUnsigned
+			+ SafeAdd
+			+ Zero;
+
 		type ProposalSource: ProposalTrait<
 			AccountId = Self::AccountId,
 			ProposalId = Self::ProposalId,
@@ -78,41 +96,102 @@ pub mod pallet {
 		CouldNotRetrieveProposal,
 	}
 
-	#[pallet::storage]
-	#[pallet::getter(fn proposals)]
-	pub type Proposals<T: Config> =
-		StorageMap<_, Twox64Concat, T::CollectiveId, Proposal<T::CollectiveId>, OptionQuery>;
+	// #[pallet::storage]
+	// #[pallet::getter(fn proposals)]
+	// pub type Proposals<T: Config> =
+	// 	StorageMap<_, Twox64Concat, T::CollectiveId, Proposal<T::CollectiveId>, OptionQuery>;
 
 	// #[pallet::storage]
-	// #[pallet::getter(fn referendums)]
-	// pub type Referendums<T: Config> =
-	// 	StorageMap<_, Twox64Concat, T::CollectiveId, Referendum<T::CollectiveId>, OptionQuery>;
+	// #[pallet::getter(fn referendum_count)]
+	// pub type ProposalCount<T: Config> =
+	// 	StorageMap<_, Twox64Concat, T::CollectiveId, T::ReferendumId, ValueQuery>;
+
+	// #[pallet::storage]
+	// #[pallet::getter(fn proposals)]
+	// pub type Proposals<T: Config> = StorageMap<
+	// 	_,
+	// 	Twox64Concat,
+	// 	T::CollectiveId,
+	// 	Twox64Concat,
+	// 	T::ProposalId,
+	// 	Proposal<T::CollectiveId>,
+	// 	OptionQuery,
+	// >;
+
+	/// The next free referendum index, aka the number of referenda started so far.
+	#[pallet::storage]
+	#[pallet::getter(fn referendum_count)]
+	pub type ReferendumCount<T: Config> =
+		StorageMap<_, Twox64Concat, T::CollectiveId, T::ReferendumId, ValueQuery>;
+
+	#[pallet::storage]
+	#[pallet::getter(fn referendums)]
+	pub type Referendums<T: Config> = StorageDoubleMap<
+		_,
+		Twox64Concat,
+		T::CollectiveId,
+		Twox64Concat,
+		T::ReferendumId,
+		//CollectiveId, ProposalId, BlockNumber, Balance
+		(
+			Referendum<T::CollectiveId, T::ProposalId, T::BlockNumber, BalanceOf<T>>,
+			Proposal<T::CollectiveId>,
+		),
+		OptionQuery,
+	>;
 
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
-		#[pallet::weight]
-		pub fn vote(
-			origin: OriginFor<T>,
-		) -> DispatchResultWithPostInfo {
-			/**
-			 * 1. 
-			 */
-			
+		#[pallet::weight(100_000)]
+		pub fn vote(origin: OriginFor<T>) -> DispatchResultWithPostInfo {
+			Ok(().into())
 		}
 
 		#[pallet::weight(100_000)]
 		pub fn start_referendum_by_value(
 			origin: OriginFor<T>,
 			collective_id: T::CollectiveId,
+			voting_priod: T::BlockNumber,
 		) -> DispatchResultWithPostInfo {
 			// - todo - caller must be collective
-			let proposal = T::ProposalSource::retrieve_highest_valued_proposal(collective_id)
-				.map_err(|_| Error::<T>::CouldNotRetrieveProposal)?;
 
-			<Proposals<T>>::insert(collective_id, proposal);
+			// <Proposals<T>>::insert(collective_id, proposal);
 			Ok(().into())
 		}
 	}
 
-	impl<T: Config> Pallet<T> {}
+	impl<T: Config> Pallet<T> {
+		fn create_referendum(
+			collective_id: T::CollectiveId,
+			voting_priod: T::BlockNumber,
+		) -> Result<T::ReferendumId, DispatchError> {
+			let id = <ReferendumCount<T>>::try_mutate(
+				collective_id,
+				|referendum_count| -> Result<T::ReferendumId, DispatchError> {
+					*referendum_count = referendum_count.safe_add(&T::ReferendumId::one())?;
+
+					/// create proposal
+					let proposal = T::ProposalSource::retrieve_highest_valued_proposal(collective_id)
+						.map_err(|_| Error::<T>::CouldNotRetrieveProposal)?;
+
+					let now = <frame_system::Pallet<T>>::block_number();
+
+					let status = ReferendumStatus::new(
+						collective_id,
+						referendum_count,
+						now.saturating_add(voting_priod),
+					);
+					<Referendums<T>>::insert(
+						collective_id,
+						referendum_count,
+						(Referendum::Ongoing(status), proposal),
+					);
+
+					Ok(*referendum_count)
+				},
+			);
+
+			id
+		}
+	}
 }

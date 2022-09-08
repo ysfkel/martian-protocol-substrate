@@ -22,10 +22,10 @@ pub enum Content {
 // 	}
 // }
 
-enum Targe {
-	Council(BTreeSet<CollectiveId>),
-	Collective(BTreeSet<CollectiveId>),
-}
+// enum Targe {
+// 	Council(BTreeSet<CollectiveId>),
+// 	Collective(BTreeSet<CollectiveId>),
+// }
 
 #[derive(Clone, Encode, Decode, Default, Debug, PartialEq, TypeInfo)]
 pub struct Proposal<CollectiveId> {

@@ -4005,13 +4005,18 @@ dependencies = [
  "hex-literal",
  "pallet-aura",
  "pallet-balances 4.0.0-dev (git+https://github.com/paritytech/substrate.git?branch=polkadot-v0.9.28)",
+ "pallet-collective",
  "pallet-grandpa",
+ "pallet-proposal",
  "pallet-randomness-collective-flip",
+ "pallet-referendum",
  "pallet-sudo",
  "pallet-timestamp",
  "pallet-transaction-payment 4.0.0-dev (git+https://github.com/paritytech/substrate.git?branch=polkadot-v0.9.28)",
  "pallet-transaction-payment-rpc-runtime-api 4.0.0-dev (git+https://github.com/paritytech/substrate.git?branch=polkadot-v0.9.28)",
  "parity-scale-codec",
+ "proposal-types",
+ "referendum-types",
  "scale-info",
  "sp-api 4.0.0-dev (git+https://github.com/paritytech/substrate.git?branch=polkadot-v0.9.28)",
  "sp-block-builder 4.0.0-dev (git+https://github.com/paritytech/substrate.git?branch=polkadot-v0.9.28)",
@@ -4343,6 +4348,7 @@ dependencies = [
  "pallet-proposal",
  "parity-scale-codec",
  "proposal-types",
+ "referendum-types",
  "scale-info",
  "sp-core 6.0.0 (git+https://github.com/paritytech/substrate.git?branch=polkadot-v0.9.27)",
  "sp-io 6.0.0 (git+https://github.com/paritytech/substrate.git?branch=polkadot-v0.9.27)",
@@ -5185,6 +5191,21 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn",
+]
+
+[[package]]
+name = "referendum-types"
+version = "0.1.0"
+dependencies = [
+ "frame-support 4.0.0-dev (git+https://github.com/paritytech/substrate.git?branch=polkadot-v0.9.27)",
+ "frame-system 4.0.0-dev (git+https://github.com/paritytech/substrate.git?branch=polkadot-v0.9.27)",
+ "parity-scale-codec",
+ "scale-info",
+ "serde",
+ "sp-core 6.0.0 (git+https://github.com/paritytech/substrate.git?branch=polkadot-v0.9.27)",
+ "sp-io 6.0.0 (git+https://github.com/paritytech/substrate.git?branch=polkadot-v0.9.27)",
+ "sp-runtime 6.0.0 (git+https://github.com/paritytech/substrate.git?branch=polkadot-v0.9.27)",
+ "sp-std 4.0.0 (git+https://github.com/paritytech/substrate.git?branch=polkadot-v0.9.27)",
 ]
 
 [[package]]

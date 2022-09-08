@@ -1,37 +1,36 @@
-use codec::Decode;
-
-use codec::EncodeLike;
+use crate::Tally;
+use codec::{Decode, EncodeLike};
 use frame_support::pallet_prelude::*;
 use scale_info::TypeInfo;
+use sp_runtime::{
+	traits::{Bounded, CheckedAdd, CheckedDiv, CheckedMul, CheckedSub, Saturating, Zero},
+	RuntimeDebug,
+};
 
-#[derive(Clone, Encode, Decode, Default, Debug, PartialEq, TypeInfo)]
-pub struct Referendum<CouncilId> {
-	pub council_id: CouncilId,
+#[derive(Clone, Encode, Decode, Default, RuntimeDebug, PartialEq, Eq, TypeInfo)]
+pub struct ReferendumStatus<CollectiveId, ProposalId, BlockNumber, Balance> {
+	/// collective id
+	pub collective_id: CollectiveId,
+	/// proposal id
+	pub proposal_id: ProposalId,
+	/// When voting on this referendum will end.
+	pub end: BlockNumber,
+
+	pub tally: Tally<Balance>,
 }
 
-// #[derive(Copy, TypeInfo, Clone, Eq, PartialEq, Default, RuntimeDebug)]
-// pub struct Vote {
-// 	pub aye: bool,
-// 	// pub conviction: Conviction
-// }
+impl<CollectiveId, ProposalId, BlockNumber, Balance: Default>
+	ReferendumStatus<CollectiveId, ProposalId, BlockNumber, Balance>
+{
+	pub fn new(collective_id: CollectiveId, proposal_id: ProposalId, end: BlockNumber) -> Self {
+		Self { collective_id, proposal_id, end, tally: Tally::default() }
+	}
+}
 
-// impl Encode for Vote {
-// 	fn encode_to<T: Output + ?Sized>(&self, output: &mut T) {
-// 		output.push_byte(u8::from(self.conv))
-// 	}
-// }
-
-// #[derive(Encode, Decode, Copy, Clone, Eq, PartialEq, RuntimeDebug, TypeInfo)]
-// pub enum AccountVote<Balance> {
-// 	Standard { vote: Vote, balance: Balance },
-// }
-
-// impl EncodeLike for Vote {}
-
-// impl Encode
-
-// impl Default for Content {
-// 	fn default() -> Self {
-// 		Self::None
-// 	}
-// }
+#[derive(Encode, Decode, Clone, PartialEq, Eq, RuntimeDebug, TypeInfo)]
+pub enum Referendum<CollectiveId, ProposalId, BlockNumber, Balance> {
+	/// Referendum is happening, the arg is the block number at which it will end.
+	Ongoing(ReferendumStatus<CollectiveId, ProposalId, BlockNumber, Balance>),
+	/// Referendum finished at `end`, and has been `approved` or rejected.
+	Finished { approved: bool, end: BlockNumber },
+}

@@ -76,6 +76,7 @@ impl pallet_referendum::Config for Test {
 	type Currency = Balances;
 	type ProposalId = u128;
 	type CollectiveId = u128;
+	type ReferendumId = u128;
 	type ProposalSource = Proposal;
 }
 
