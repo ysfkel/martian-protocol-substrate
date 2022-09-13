@@ -14,7 +14,7 @@ type BalanceOf<T> =
 pub mod pallet {
 	use super::*;
 	use codec::FullCodec;
-	use collective_types::CollectiveInspect;
+	use collective_types::CollectiveAuthorize;
 	use core::{fmt::Debug, ops::AddAssign};
 	use frame_support::pallet_prelude::*;
 	use frame_system::pallet_prelude::*;
@@ -89,7 +89,10 @@ pub mod pallet {
 			CollectiveId = Self::CollectiveId,
 		>;
 
-		type ColleciveInspect: CollectiveInspect<Self::AccountId, CollectiveId = Self::CollectiveId>;
+		type CollectiveAuthorize: CollectiveAuthorize<
+			Self::AccountId,
+			CollectiveId = Self::CollectiveId,
+		>;
 	}
 
 	#[pallet::event]
@@ -153,7 +156,7 @@ pub mod pallet {
 		) -> DispatchResultWithPostInfo {
 			let who = ensure_signed(origin)?;
 			ensure!(
-				T::ColleciveInspect::is_admin(who, collective_id),
+				T::CollectiveAuthorize::is_admin(who, collective_id),
 				Error::<T>::NotCollectiveAdmin
 			);
 

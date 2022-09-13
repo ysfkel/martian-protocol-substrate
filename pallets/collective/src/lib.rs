@@ -1,6 +1,6 @@
 use collective_types::{
 	models::{Collective, ConvictionType},
-	CollectiveInspect,
+	CollectiveAuthorize,
 };
 #[cfg_attr(not(feature = "std"), no_std)]
 pub use pallet::*;
@@ -144,7 +144,7 @@ pub mod pallet {
 	}
 }
 
-impl<T: Config> CollectiveInspect<T::AccountId> for Pallet<T> {
+impl<T: Config> CollectiveAuthorize<T::AccountId> for Pallet<T> {
 	type CollectiveId = T::CollectiveId;
 
 	fn is_admin(account_id: T::AccountId, collective_id: Self::CollectiveId) -> bool {
