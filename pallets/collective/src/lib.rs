@@ -155,7 +155,7 @@ impl<T: Config> CollectiveInspect<T::AccountId> for Pallet<T> {
 		}
 	}
 
-	fn contains(account_id: T::AccountId, collective_id: Self::CollectiveId) -> bool {
+	fn is_member(account_id: T::AccountId, collective_id: Self::CollectiveId) -> bool {
 		if let Some(collective) = Self::collectives(collective_id) {
 			return collective.0.contains(&account_id)
 		} else {
