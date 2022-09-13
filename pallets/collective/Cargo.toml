@@ -12,6 +12,7 @@ collective-types = {version = "0.1.0", default-features = false, path = "../syst
 frame-support = {version = "4.0.0-dev", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.27"}
 frame-system = {version = "4.0.0-dev", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.27"}
 
+pallet-math = {path = "../math", version = "0.1.0", default-features = false}
 scale-info = {version = "2.1.1", default-features = false, features = ["derive"]}
 sp-runtime = {default-features = false, version = "6.0.0", git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.27"}
 sp-std = {git = "https://github.com/paritytech/substrate", default-features = false, branch = "polkadot-v0.9.27"}
@@ -25,6 +26,7 @@ default = ["std"]
 std = [
   "codec/std",
   "scale-info/std",
+  "pallet-math/std",
   "frame-support/std",
   "frame-system/std",
   "sp-std/std",

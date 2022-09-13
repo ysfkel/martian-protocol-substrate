@@ -14,12 +14,13 @@ type BalanceOf<T> =
 pub mod pallet {
 	use super::*;
 	use codec::FullCodec;
+	use collective_types::CollectiveInspect;
 	use core::{fmt::Debug, ops::AddAssign};
 	use frame_support::pallet_prelude::*;
 	use frame_system::pallet_prelude::*;
 	use num_traits::One;
 	use pallet_math::SafeAdd;
-	use proposal_types::{models::Proposal, traits::ProposalTrait};
+	use proposal_types::{models::Proposal, traits::ProposalInspect};
 	use referendum_types::{Referendum, ReferendumStatus};
 	use sp_runtime::{
 		traits::{AtLeast32BitUnsigned, CheckedAdd, MaybeDisplay, Saturating, Zero},
@@ -82,19 +83,29 @@ pub mod pallet {
 			+ SafeAdd
 			+ Zero;
 
-		type ProposalSource: ProposalTrait<
+		type ProposalSource: ProposalInspect<
 			AccountId = Self::AccountId,
 			ProposalId = Self::ProposalId,
 			CollectiveId = Self::CollectiveId,
 		>;
+
+		type ColleciveInspect: CollectiveInspect<Self::AccountId, CollectiveId = Self::CollectiveId>;
 	}
 
 	#[pallet::event]
-	pub enum Event<T: Config> {}
+	#[pallet::generate_deposit(pub(super) fn deposit_event)]
+	pub enum Event<T: Config> {
+		ReferendumStarted {
+			referendum_id: T::ReferendumId,
+			collective_id: T::CollectiveId,
+			voting_period: T::BlockNumber,
+		},
+	}
 
 	#[pallet::error]
 	pub enum Error<T> {
 		CouldNotRetrieveProposal,
+		NotCollectiveAdmin,
 	}
 
 	#[pallet::storage]
@@ -138,10 +149,20 @@ pub mod pallet {
 		pub fn start_referendum_by_value(
 			origin: OriginFor<T>,
 			collective_id: T::CollectiveId,
-			voting_priod: T::BlockNumber,
+			voting_period: T::BlockNumber,
 		) -> DispatchResultWithPostInfo {
-			// - todo - caller must be collective
-			Self::create_referendum(collective_id, voting_priod);
+			let who = ensure_signed(origin)?;
+			ensure!(
+				T::ColleciveInspect::is_admin(who, collective_id),
+				Error::<T>::NotCollectiveAdmin
+			);
+
+			let referendum_id = Self::create_referendum(collective_id, voting_period)?;
+			Self::deposit_event(Event::<T>::ReferendumStarted {
+				referendum_id,
+				collective_id,
+				voting_period,
+			});
 			Ok(().into())
 		}
 	}

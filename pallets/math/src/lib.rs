@@ -1,3 +1,5 @@
+#![cfg_attr(not(feature = "std"), no_std)]
+
 use sp_runtime::{traits::CheckedAdd, ArithmeticError};
 
 pub trait SafeAdd: Sized {

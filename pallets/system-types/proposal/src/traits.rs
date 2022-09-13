@@ -5,7 +5,7 @@ use std::error::Error;
 use crate::models::Proposal;
 use sp_runtime::DispatchError;
 
-pub trait ProposalTrait {
+pub trait ProposalInspect {
 	type ProposalId;
 	type AccountId;
 	type CollectiveId;

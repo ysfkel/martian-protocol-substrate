@@ -2,7 +2,7 @@
 
 use frame_support::traits::{defensive_prelude::*, Currency, LockableCurrency, ReservableCurrency};
 pub use pallet::*;
-use proposal_types::{models::Proposal, traits::ProposalTrait};
+use proposal_types::{models::Proposal, traits::ProposalInspect};
 use sp_runtime::{
 	traits::{AtLeast32BitUnsigned, CheckedAdd, Saturating, Zero},
 	DispatchError,
@@ -246,7 +246,7 @@ pub mod pallet {
 	}
 }
 
-impl<T: Config> ProposalTrait for Pallet<T> {
+impl<T: Config> ProposalInspect for Pallet<T> {
 	type ProposalId = T::ProposalId;
 	type AccountId = T::AccountId;
 	type CollectiveId = T::CollectiveId;

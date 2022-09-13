@@ -49,12 +49,12 @@ frame-system-benchmarking = {version = "4.0.0-dev", default-features = false, gi
 hex-literal = {version = "0.3.4", optional = true}
 
 # Local Dependencies
-collective-types = {version = "0.1.0", default-features = false, path = "../pallets/system-types/collective"}
-pallet-collective = {version = "0.1.0", default-features = false, path = "../pallets/collective"}
-pallet-proposal = {version = "0.1.0", default-features = false, path = "../pallets/proposal"}
-pallet-referendum = {version = "0.1.0", default-featurs = false, path = "../pallets/referendum"}
-proposal-types = {version = "0.1.0", default-featurs = false, path = "../pallets/system-types/proposal"}
-referendum-types = {version = "0.1.0", default-features = false, path = "../pallets/system-types/referendum"}
+# collective-types = {version = "0.1.0", default-features = false, path = "../pallets/system-types/collective"}
+# pallet-collective = {version = "0.1.0", default-features = false, path = "../pallets/collective"}
+# pallet-proposal = {version = "0.1.0", default-features = false, path = "../pallets/proposal"}
+# pallet-referendum = {version = "0.1.0", default-featurs = false, path = "../pallets/referendum"}
+# proposal-types = {version = "0.1.0", default-featurs = false, path = "../pallets/system-types/proposal"}
+# referendum-types = {version = "0.1.0", default-features = false, path = "../pallets/system-types/referendum"}
 
 [build-dependencies]
 substrate-wasm-builder = {version = "5.0.0-dev", git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.28"}
@@ -79,10 +79,9 @@ std = [
   "frame-support/std",
   "frame-system-rpc-runtime-api/std",
   "frame-system/std",
-  "pallet-aura/std",
+  "pallet-aura/std", # "collective-types/std",  # "pallet-collective/std",  # "pallet-proposal/std",  # "proposal-types/std",  # "referendum-types/std",  # "pallet-referendum/std",
   "pallet-balances/std",
   "pallet-grandpa/std",
-  "collective-types/std",
   "pallet-randomness-collective-flip/std",
   "pallet-sudo/std",
   "pallet-timestamp/std",
