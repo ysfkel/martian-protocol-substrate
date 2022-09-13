@@ -70,7 +70,8 @@ pub mod pallet {
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {
-		MembersAdded { collective: CollectiveId<T>, members: Vec<T::AccountId> },
+		MembersAdded { collective: T::CollectiveId, members: Vec<T::AccountId> },
+		CollectiveCreated { collective_id: T::CollectiveId, admin: T::AccountId },
 	}
 
 	#[pallet::error]
@@ -94,11 +95,16 @@ pub mod pallet {
 				|collective_count| -> Result<T::CollectiveId, DispatchError> {
 					*collective_count = collective_count.safe_add(&T::CollectiveId::one())?;
 
-					Collectives::<T>::insert(collective_count.clone(), (members, conviction, who));
+					Collectives::<T>::insert(
+						collective_count.clone(),
+						(members, conviction, who.clone()),
+					);
 
 					Ok(*collective_count)
 				},
-			);
+			)?;
+
+			Self::deposit_event(Event::<T>::CollectiveCreated { collective_id: id, admin: who });
 
 			Ok(().into())
 		}
@@ -128,7 +134,10 @@ pub mod pallet {
 
 			<Collectives<T>>::insert(&collective_id, &collective);
 
-			Self::deposit_event(Event::<T>::MembersAdded { collective: who, members: new_members });
+			Self::deposit_event(Event::<T>::MembersAdded {
+				collective: collective_id,
+				members: new_members,
+			});
 
 			Ok(().into())
 		}
