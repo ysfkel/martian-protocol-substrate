@@ -1,5 +1,5 @@
 
-#  
+# Martian Protocol
 Inspired by the Substrate Democracy Pallet .
 This this is a protocol which aims to provide decenralized communities for projects governence
 and related activities
