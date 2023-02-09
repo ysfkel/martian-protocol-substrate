@@ -1,16 +1,14 @@
 
 #  
 Inspired by the Substrate Democracy Pallet .
-This this is a project which aims to provide a protocol for governence communities for 
-Projects.
-
+This this is a protocol which aims to provide decnralized communities for projects governence 
 This project is a work in progress . 
 The following Pallets are currently in development 
 
 ## Collective  
   - Collective: Create a collective to vote on projects 
 
-## Proposal]
+## Proposal
 -  Submit Proposal to collective 
 -  Endorse proposal 
 
