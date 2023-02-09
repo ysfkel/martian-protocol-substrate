@@ -13,8 +13,6 @@ mod mock;
 #[cfg(test)]
 mod test;
 
-// pub type ProposalIndex = u32;
-
 type BalanceOf<T> =
 	<<T as Config>::Currency as Currency<<T as frame_system::Config>::AccountId>>::Balance;
 #[frame_support::pallet]
@@ -56,7 +54,7 @@ pub mod pallet {
 			+ AtLeast32BitUnsigned
 			+ SafeAdd
 			+ Zero;
-		// + From<u128>;
+
 		type CollectiveId: FullCodec
 			+ Parameter
 			+ Member
@@ -110,25 +108,6 @@ pub mod pallet {
 		(Vec<T::AccountId>, BalanceOf<T>),
 	>;
 
-	// #[pallet::genesis_config]
-	// pub struct GenesisConfig<T: Config> {
-	// 	_phantom: sp_std::marker::PhantomData<T>,
-	// }
-
-	// #[cfg(feature = "std")]
-	// impl<T: Config> Default for GenesisConfig<T> {
-	// 	fn default() -> Self {
-	// 		GenesisConfig { _phantom: Default::default() }
-	// 	}
-	// }
-
-	// #[pallet::genesys_build]
-	// impl<T: Config> GenesisBuild<T> for GenesisConfig<T> {
-	// 	fn build(&self) {
-	// 		//ProposalIndex::<T>::put(0 as T::ProposalId);
-	// 	}
-	// }
-
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {
@@ -155,14 +134,6 @@ pub mod pallet {
 		NoProposalToRemove,
 		CollectiveNotFound,
 	}
-
-	// #[pallet::hooks]
-	// impl<T: Config> Hooks<BlockNumberFor<T>> for Pallet<T> {
-	// 	/// Weight: see `begin_block`
-	// 	// fn on_initialize(n: T::BlockNumber) -> Weight {
-	// 	// 	//Self::begin_block(n)
-	// 	// }
-	// }
 
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
