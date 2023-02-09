@@ -6,7 +6,7 @@ This project is a work in progress .
 The following Pallets are currently in development 
 
 ## Collective  
-  - Collective: Create a collective to vote on projects 
+  - Collective: Create and manage collectives that vote on projects
 
 ## Proposal
 -  Submit Proposal to collective 
