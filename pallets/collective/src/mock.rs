@@ -1,4 +1,3 @@
-use super::*;
 use crate as pallet_collective;
 use frame_support::{
 	parameter_types,
@@ -19,11 +18,12 @@ frame_support::construct_runtime!(
 	where
 		Block = Block,
 		NodeBlock = Block,
-		UncheckedExtrinsic = UncheckedExtrinsic, {
-			System: frame_system::{Pallet, Config, Storage, Event<T>},
-			Balances: pallet_balances::{Pallet, Call, Config<T>, Storage, Event<T>},
-			Collective: pallet_collective::{Pallet, Call,  Storage, Event<T>},
-		}
+		UncheckedExtrinsic = UncheckedExtrinsic,
+	{
+		System: frame_system::{Pallet, Config, Storage, Event<T>},
+		Balances: pallet_balances::{Pallet, Call, Config<T>, Storage, Event<T>},
+		Collective: pallet_collective::{Pallet, Call,  Storage, Event<T>},
+	}
 );
 
 impl pallet_collective::Config for Test {

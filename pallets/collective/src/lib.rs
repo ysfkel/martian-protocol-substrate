@@ -1,6 +1,6 @@
 use collective_types::{
 	models::{Collective, ConvictionType},
-	CollectiveAuthorize,
+	CollectiveAuthorize, CollectiveInspect,
 };
 #[cfg_attr(not(feature = "std"), no_std)]
 pub use pallet::*;
@@ -76,7 +76,7 @@ pub mod pallet {
 
 	#[pallet::error]
 	pub enum Error<T> {
-		NoMembersToAdd,
+		NoNewMembersToAdd,
 		NotAmin,
 		CollectiveNotFound,
 	}
@@ -125,7 +125,7 @@ pub mod pallet {
 			let new_members: Vec<_> = members.difference(&collective.0).cloned().collect();
 
 			if collective.0.len() > 0 {
-				ensure!(new_members.len() > 0, Error::<T>::NoMembersToAdd);
+				ensure!(new_members.len() > 0, Error::<T>::NoNewMembersToAdd);
 			}
 
 			let mut m = BTreeSet::from_iter(new_members.clone());
@@ -149,17 +149,29 @@ impl<T: Config> CollectiveAuthorize<T::AccountId> for Pallet<T> {
 
 	fn is_admin(account_id: T::AccountId, collective_id: Self::CollectiveId) -> bool {
 		if let Some(collective) = Self::collectives(collective_id) {
-			return collective.2 == account_id
+			collective.2 == account_id
 		} else {
-			return false
+			false
 		}
 	}
 
 	fn is_member(account_id: T::AccountId, collective_id: Self::CollectiveId) -> bool {
 		if let Some(collective) = Self::collectives(collective_id) {
-			return collective.0.contains(&account_id)
+			collective.0.contains(&account_id)
 		} else {
-			return false
+			false
+		}
+	}
+}
+
+impl<T: Config> CollectiveInspect for Pallet<T> {
+	type CollectiveId = T::CollectiveId;
+
+	fn exists(collective_id: Self::CollectiveId) -> bool {
+		if let Some(collective) = Self::collectives(collective_id) {
+			true
+		} else {
+			false
 		}
 	}
 }

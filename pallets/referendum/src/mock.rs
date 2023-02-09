@@ -1,7 +1,8 @@
 use crate as pallet_referendum;
+use collective_types::Collective;
 use frame_support::{
 	parameter_types,
-	traits::{ConstU16, ConstU64},
+	traits::{ConstU16, ConstU32, ConstU64},
 };
 use frame_system as system;
 use sp_core::H256;
@@ -24,6 +25,7 @@ frame_support::construct_runtime!(
 		Balances: pallet_balances::{Pallet, Call, Config<T>, Storage, Event<T>},
 		Referendum: pallet_referendum::{Pallet, Call, Storage, Event<T>},
 		Proposal: pallet_proposal::{Pallet, Call, Storage, Event<T>},
+		CollectivePallet: pallet_collective::{Pallet, Call,  Storage, Event<T>},
 	}
 );
 
@@ -78,6 +80,14 @@ impl pallet_referendum::Config for Test {
 	type CollectiveId = u128;
 	type ReferendumId = u128;
 	type ProposalSource = Proposal;
+	type CollectiveAuthorize = CollectivePallet;
+	type CollectiveInspect = CollectivePallet;
+	type MaxVotes = ConstU32<1000>;
+}
+
+impl pallet_collective::Config for Test {
+	type Event = Event;
+	type CollectiveId = u128;
 }
 
 impl pallet_proposal::Config for Test {
@@ -85,6 +95,7 @@ impl pallet_proposal::Config for Test {
 	type Currency = Balances;
 	type ProposalId = u128;
 	type CollectiveId = u128;
+	type CollectiveInspect = CollectivePallet;
 }
 
 // Build genesis storage according to the mock runtime.

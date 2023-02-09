@@ -1,4 +1,4 @@
-use crate::{AccountVote, Delegations, Vote};
+use crate::{delegations, AccountVote, Delegations, Vote};
 use codec::{Decode, Encode};
 use scale_info::TypeInfo;
 use sp_runtime::{
@@ -48,6 +48,43 @@ impl<
 					false => self.nays = self.nays.checked_add(&votes)?,
 				}
 			},
+		}
+
+		Some(())
+	}
+
+	/// Remove an account's vote from the tally.
+	pub fn remove(&mut self, vote: AccountVote<Balance>) -> Option<()> {
+		match vote {
+			AccountVote::Standard { vote, balance } => {
+				let Delegations { votes, capital } = vote.conviction.votes(balance);
+				self.turnout = self.turnout.checked_sub(&capital)?;
+				match vote.aye {
+					true => self.ayes = self.ayes.checked_sub(&votes)?,
+					false => self.nays = self.nays.checked_sub(&votes)?,
+				}
+			},
+		}
+
+		Some(())
+	}
+
+	///Increment some amount of votes
+	pub fn increase(&mut self, approve: bool, delegations: Delegations<Balance>) -> Option<()> {
+		self.turnout = self.turnout.saturating_add(delegations.capital);
+		match approve {
+			true => self.ayes = self.ayes.saturating_add(delegations.votes),
+			false => self.nays = self.nays.saturating_add(delegations.votes),
+		}
+		Some(())
+	}
+
+	/// Decrement some amount of votes
+	pub fn reduce(&mut self, approve: bool, delegations: Delegations<Balance>) -> Option<()> {
+		self.turnout = self.turnout.saturating_sub(delegations.capital);
+		match approve {
+			true => self.ayes = self.ayes.saturating_sub(delegations.votes),
+			false => self.nays = self.nays.saturating_sub(delegations.votes),
 		}
 
 		Some(())

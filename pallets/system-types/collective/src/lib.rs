@@ -3,4 +3,4 @@ pub mod models;
 pub mod traits;
 
 pub use models::{Collective, ConvictionType};
-pub use traits::CollectiveAuthorize;
+pub use traits::{CollectiveAuthorize, CollectiveInspect};

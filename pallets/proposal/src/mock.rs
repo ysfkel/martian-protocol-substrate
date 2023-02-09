@@ -23,6 +23,7 @@ frame_support::construct_runtime!(
 		System: frame_system::{Pallet, Call, Config, Storage, Event<T>},
 		Balances: pallet_balances::{Pallet, Call, Config<T>, Storage, Event<T>},
 		Proposal: pallet_proposal::{Pallet, Call, Storage, Event<T>},
+		CollectivePallet: pallet_collective::{Pallet, Call,  Storage, Event<T>},
 	}
 );
 
@@ -70,11 +71,17 @@ impl system::Config for Test {
 	type MaxConsumers = frame_support::traits::ConstU32<16>;
 }
 
+impl pallet_collective::Config for Test {
+	type Event = Event;
+	type CollectiveId = u128;
+}
+
 impl pallet_proposal::Config for Test {
 	type Event = Event;
 	type Currency = Balances;
 	type ProposalId = u128;
 	type CollectiveId = u128;
+	type CollectiveInspect = CollectivePallet;
 }
 
 // Build genesis storage according to the mock runtime.

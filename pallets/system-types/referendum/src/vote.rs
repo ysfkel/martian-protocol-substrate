@@ -1,5 +1,6 @@
 use crate::{delegations, Conviction, Delegations};
 use codec::{Decode, Encode, EncodeLike, Input, Output};
+use frame_support::traits::tokens::Balance;
 use scale_info::TypeInfo;
 use sp_runtime::{
 	traits::{Saturating, Zero},
@@ -133,7 +134,7 @@ impl<Balance: Default, AccountId, BlockNumber: Zero, ReferendumIndex> Default
 {
 	fn default() -> Self {
 		Voting::Direct {
-			votes: Vec::new(),
+			votes: Default::default(),
 			delegations: Default::default(),
 			prior: PriorLock(Zero::zero(), Default::default()),
 		}

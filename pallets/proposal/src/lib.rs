@@ -1,5 +1,5 @@
 #![cfg_attr(not(feature = "std"), no_std)]
-
+use collective_types::CollectiveInspect;
 use frame_support::traits::{defensive_prelude::*, Currency, LockableCurrency, ReservableCurrency};
 pub use pallet::*;
 use proposal_types::{models::Proposal, traits::ProposalInspect};
@@ -69,6 +69,7 @@ pub mod pallet {
 			+ PartialEq
 			+ Copy
 			+ TypeInfo;
+		type CollectiveInspect: CollectiveInspect<CollectiveId = Self::CollectiveId>;
 	}
 
 	#[pallet::storage]
@@ -152,6 +153,7 @@ pub mod pallet {
 		ProposalNotFound,
 		NoProposalFound,
 		NoProposalToRemove,
+		CollectiveNotFound,
 	}
 
 	// #[pallet::hooks]
@@ -170,12 +172,13 @@ pub mod pallet {
 			collective_id: T::CollectiveId,
 			content: Vec<u8>,
 			#[pallet::compact] value: BalanceOf<T>,
-			collective: T::CollectiveId,
 		) -> DispatchResultWithPostInfo {
 			let who = ensure_signed(origin)?;
+			ensure!(T::CollectiveInspect::exists(collective_id), Error::<T>::CollectiveNotFound);
 			T::Currency::reserve(&who, value)?;
+
 			let proposal_index =
-				Self::_create_proposal(content, collective_id.clone(), &who, collective)?;
+				Self::_create_proposal(content, collective_id.clone(), &who, collective_id)?;
 
 			<DepositOf<T>>::insert(collective_id, proposal_index, (&[&who][..], value));
 			Self::deposit_event(Event::<T>::ProposalCreated { proposal_index, deposit: value });
